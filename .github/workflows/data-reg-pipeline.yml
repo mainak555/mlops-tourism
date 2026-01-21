@@ -28,7 +28,7 @@ jobs:
             fi
 
         - name: Install dependencies
-          run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+          run: pip install --no-cache-dir --upgrade huggingface_hub==0.34.3
 
         - name: Data Registration
           run: python ./data-reg.py

@@ -1,5 +1,5 @@
 
-from huggingface_hub import login, HfApi
+from huggingface_hub import HfApi
 from util import create_hf_repo
 import os
 
