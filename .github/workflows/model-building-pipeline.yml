@@ -1,6 +1,12 @@
 
 name: Tourism MLOps Pipeline
 
+run-name: >-
+  ${{ github.event_name == 'repository_dispatch'
+      && github.event.client_payload.description
+      || github.workflow 
+  }}
+
 env:
   CSV_DATA_FILE: tourism.csv
 
