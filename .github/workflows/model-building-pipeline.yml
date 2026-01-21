@@ -59,12 +59,18 @@ jobs:
       - name: Data Clean-up & Train/Test Split
         run: python ./model_building/train_test_split.py
 
+      - name: HF to close any pending commit
+        run: sleep 5s        
+
   model_build:
     needs: [setup, data_clean]
     if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
     runs-on: ubuntu-latest
     environment: prod
     env:
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
       HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
       HF_REPO: ${{ vars.HF_REPO }}
 

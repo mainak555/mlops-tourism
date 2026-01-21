@@ -1,6 +1,5 @@
 
 from sklearn.ensemble import (
-    RandomForestRegressor,
     AdaBoostClassifier,
     BaggingClassifier,
 )
@@ -9,17 +8,6 @@ from sklearn.tree import DecisionTreeClassifier
 from scipy.stats import randint, uniform
 
 MODEL_CONFIG = {
-    "RandomForest": {
-        "estimator": RandomForestRegressor(random_state=42),
-        "grid_params": {
-            "randomforestregressor__n_estimators": [50, 100, 200],
-            "randomforestregressor__max_depth": [None, 5, 10, 20, 30, 50],
-            "randomforestregressor__min_samples_split": [2, 5, 10, 20],
-            "randomforestregressor__min_samples_leaf": [1, 2, 4, 8],
-            "randomforestregressor__max_features": ["sqrt", "log2", None],
-            "randomforestregressor__bootstrap": [True, False]
-        }
-    },
     "BaggingClassifier": {
         "estimator": BaggingClassifier(
             estimator=DecisionTreeClassifier(random_state=42),
