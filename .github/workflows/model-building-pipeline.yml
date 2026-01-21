@@ -88,7 +88,7 @@ jobs:
 
   ui_deploy:
     needs: model_deploy
-    if: >_
+    if: >-
       ${{
         needs.setup.outputs.run_mode == 'Full' || 
         needs.setup.outputs.run_mode == 'Push' ||
