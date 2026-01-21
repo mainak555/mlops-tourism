@@ -89,6 +89,7 @@ jobs:
 
   model_deploy:
     needs: model_build
+    if: always() && !failure() && !cancelled() && needs.model_build.result == 'success'
     runs-on: ubuntu-latest
     environment: prod
     env:
@@ -114,6 +115,3 @@ jobs:
     steps:
       - name: Deploy UI to HF
         run: echo "UI  Deploy"
-
-
-
