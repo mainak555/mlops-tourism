@@ -18,7 +18,7 @@ commits = hfApi.list_repo_commits(
 )
 
 latest_sha = commits[0].commit_id
-commit_info = api.get_commit_info(
+commit_info = hfApi.get_commit_info(
     repo_id=os.getenv("HF_REPO"),
     revision=latest_sha,
     repo_type="dataset"
@@ -30,7 +30,7 @@ changes = (
     commit_info.files.deleted
 )
 
-if os.getenv("CSV_DATA_FILE") not in changed_files:
+if os.getenv("CSV_DATA_FILE") not in changes:
     print("No Change in Source Data")
     sys.exit(1)
 
