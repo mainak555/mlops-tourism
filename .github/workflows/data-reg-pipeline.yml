@@ -1,31 +1,34 @@
 
+name: Upload data to Hugging Face Dataset
+
 on:
   push:
     branches: [ master ]
     paths:
-      #- data/**
       - data/tourism.csv
 
 jobs:
-    data_reg:
-        name: Data Registration to HF
-        runs-on: ubuntu-latest
-        environment: prod
-        env:
-            HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
-            HF_REPO: ${{ vars.HF_REPO }}
-        steps:
-            - uses: actions/checkout@v4
+    deploy:      
+      name: Upload tourism.csv
+      runs-on: ubuntu-latest
+      environment: prod
 
-            - name: Check File Exists
-              run: |
-                if [ ! -f "./data/tourism.csv" ]; then
-                  echo "Required file missing. Aborted."
-                  exit 1
-                fi
+      env:
+        HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+        HF_REPO: ${{ vars.HF_REPO }}
 
-            - name: Install dependencies
-              run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+      steps:
+        - uses: actions/checkout@v4
 
-            - name: Data Registration
-              run: python ./data-reg.py
+        - name: Check File Exists
+          run: |
+            if [ ! -f "./data/tourism.csv" ]; then
+              echo "Required file missing. Aborted."
+              exit 1
+            fi
+
+        - name: Install dependencies
+          run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+
+        - name: Data Registration
+          run: python ./data-reg.py

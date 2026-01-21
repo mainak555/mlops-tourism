@@ -1,0 +1,104 @@
+
+name: Tourism MLOps Pipeline
+
+env:
+  CSV_DATA_FILE: tourism.csv
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - model_building/**
+
+  repository_dispatch:
+    types: [ hf_webhook_event ]
+
+  workflow_dispatch:
+    inputs:
+      run_mode:
+        description: 'Select Run'
+        required: true
+        type: choice
+        options:
+          - Full
+          - Partial
+          - UI Only
+        default: Partial
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      run_mode: ${{ steps.mode.outputs.run_mode }}
+    steps:
+      - id: mode
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_mode=${{ inputs.run_mode }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "run_mode=RepoDispatch" >> $GITHUB_OUTPUT
+          else
+            echo "run_mode=Push" >> $GITHUB_OUTPUT
+          fi
+
+  data_clean:
+    needs: setup    
+    if: ${{ needs.setup.outputs.run_mode == 'Full' || needs.setup.outputs.run_mode == 'RepoDispatch' }}
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+      HF_REPO: ${{ vars.HF_REPO }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+
+      - name: Data Clean-up & Train/Test Split
+        run: python ./model_building/train_test_split.py
+
+  model_build:
+    needs: [setup, data_clean]
+    if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+      HF_REPO: ${{ vars.HF_REPO }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+
+      - name: Model Evaluation
+        run: python ./model_building/model_train.py
+
+  model_deploy:
+    needs: model_build
+    if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      run: echo "Model Deploy"
+
+  ui_deploy:
+    needs: model_deploy
+    if: >_
+      ${{
+        needs.setup.outputs.run_mode == 'Full' || 
+        needs.setup.outputs.run_mode == 'Push' ||
+        needs.setup.outputs.run_mode == 'UI Only'
+      }}
+    runs-on: ubuntu-latest
+    environment: prod
+
+    steps:
+      run: echo "UI  Deploy"
+
+
+
