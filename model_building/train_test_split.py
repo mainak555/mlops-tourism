@@ -11,16 +11,14 @@ DATASET_PATH = f"hf://datasets/{os.getenv("HF_REPO")}/{os.getenv("CSV_DATA_FILE"
 
 ## Extra Code to prevent from duplicate run due to train/test splits commit ##
 ## Not a Real Prod Scenario ##
-commits = hfApi.list_repo_commits(
+commit = hfApi.list_repo_commits(
     repo_id=os.getenv("HF_REPO"),
-    repo_type="dataset",
-    limit=1
-)
+    repo_type="dataset"
+)[0]
 
-latest_sha = commits[0].commit_id
 commit_info = hfApi.get_commit_info(
     repo_id=os.getenv("HF_REPO"),
-    revision=latest_sha,
+    revision=commit.commit_id,
     repo_type="dataset"
 )
 
