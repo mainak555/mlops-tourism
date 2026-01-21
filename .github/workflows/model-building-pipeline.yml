@@ -3,7 +3,12 @@ name: Tourism MLOps Pipeline
 
 run-name: >-
   ${{ github.event_name == 'repository_dispatch'
-      && github.event.client_payload.description
+      && format(
+           '{0} ({1} @{2})',
+           github.event.client_payload.description,
+           github.event.client_payload.hf_repo_type,
+           github.event.client_payload.hf_repo
+         )
       || github.workflow 
   }}
 
