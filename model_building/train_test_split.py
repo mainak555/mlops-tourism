@@ -2,13 +2,49 @@
 from sklearn.model_selection import train_test_split
 from huggingface_hub import HfApi
 import pandas as pd
+import sys
 import os
 
 # loading dataset from Hugging Face data space
 hfApi = HfApi(token=os.getenv("HF_TOKEN"))
 DATASET_PATH = f"hf://datasets/{os.getenv("HF_REPO")}/{os.getenv("CSV_DATA_FILE")}"
 
-df = pd.read_csv(DATASET_PATH)
+## Extra Code to prevent from duplicate run due to train/test splits commit ##
+## Not a Real Prod Scenario ##
+commits = hfApi.list_repo_commits(
+    repo_id=os.getenv("HF_REPO"),
+    repo_type="dataset",
+    limit=1
+)
+
+latest_sha = commits[0].commit_id
+commit_info = api.get_commit_info(
+    repo_id=os.getenv("HF_REPO"),
+    revision=latest_sha,
+    repo_type="dataset"
+)
+
+changes = (
+    commit_info.files.added +
+    commit_info.files.modified +
+    commit_info.files.deleted
+)
+
+if os.getenv("CSV_DATA_FILE") not in changed_files:
+    print("No Change in Source Data")
+    sys.exit(1)
+
+##############################
+
+try:
+    df = pd.read_csv(DATASET_PATH)
+except FileNotFoundError:
+        print(f"{f}.csv missing @HF Dataset.")
+        sys.exit(1)
+except Exception as e:
+    print(f"Error Checking Path: {DATASET_PATH} | Err: {e}")
+    sys.exit(1)
+
 print("\033[1mRows: {}\033[0m & \033[1mColumns: {}\033[0m".format(
             df.shape[0], df.shape[1]
     ))
