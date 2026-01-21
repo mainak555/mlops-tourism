@@ -64,7 +64,11 @@ jobs:
 
   model_build:
     needs: [setup, data_clean]
-    if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
+    if: >- 
+      ${{ 
+        always() && !failure() && !cancelled() &&
+        needs.setup.outputs.run_mode != 'UI Only' 
+      }}
     runs-on: ubuntu-latest
     environment: prod
     env:
@@ -85,7 +89,6 @@ jobs:
 
   model_deploy:
     needs: model_build
-    if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
     runs-on: ubuntu-latest
     environment: prod
     env:
@@ -97,12 +100,13 @@ jobs:
         run: echo "Model Deploy"
 
   ui_deploy:
-    needs: model_deploy
+    needs: [setup, model_deploy]
     if: >-
       ${{
-        needs.setup.outputs.run_mode == 'Full' || 
+        always() && !failure() && !cancelled() &&
+        (needs.setup.outputs.run_mode == 'Full' || 
         needs.setup.outputs.run_mode == 'Push' ||
-        needs.setup.outputs.run_mode == 'UI Only'
+        needs.setup.outputs.run_mode == 'UI Only')
       }}
     runs-on: ubuntu-latest
     environment: prod
