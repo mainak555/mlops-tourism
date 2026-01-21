@@ -16,17 +16,12 @@ commit = hfApi.list_repo_commits(
     repo_type="dataset"
 )[0]
 
-commit_info = hfApi.get_commit_info(
-    repo_id=os.getenv("HF_REPO"),
-    revision=commit.commit_id,
-    repo_type="dataset"
-)
-
-changes = (
-    commit_info.files.added +
-    commit_info.files.modified +
-    commit_info.files.deleted
-)
+changes = []
+tree = list(hfApi.list_repo_tree(os.getenv("HF_REPO"), repo_type="dataset", expand=True))
+for item in tree:
+    if hasattr(item, 'last_commit') and item.last_commit:
+        if item.last_commit['oid'] == commit.commit_id:
+            changes.append(item.path)
 
 if os.getenv("CSV_DATA_FILE") not in changes:
     print("No Change in Source Data")
