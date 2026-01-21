@@ -82,9 +82,13 @@ jobs:
     if: ${{ needs.setup.outputs.run_mode != 'UI Only' }}
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+      HF_REPO: ${{ vars.HF_REPO }}
 
     steps:
-      run: echo "Model Deploy"
+      - name: Deploy Model to HF
+        run: echo "Model Deploy"
 
   ui_deploy:
     needs: model_deploy
@@ -98,7 +102,8 @@ jobs:
     environment: prod
 
     steps:
-      run: echo "UI  Deploy"
+      - name: Deploy UI to HF
+        run: echo "UI  Deploy"
 
 
 
