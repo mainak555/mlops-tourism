@@ -58,6 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     env:
+      RUN_MODE: ${{ needs.setup.outputs.run_mode }}
       HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
       HF_REPO: ${{ vars.HF_REPO }}
 
@@ -70,10 +71,16 @@ jobs:
 
           cd ./mlops-tourism
           if git diff --quiet HEAD~1 HEAD -- "$CSV_DATA_FILE"; then
-            echo "### Pipeline Stopped" >> $GITHUB_STEP_SUMMARY
-            echo "- No new data detected" >> $GITHUB_STEP_SUMMARY
-            echo "- File checked: \`$CSV_DATA_FILE\`" >> $GITHUB_STEP_SUMMARY
-            exit 1
+            if [ "$RUN_MODE" == "Full" ]; then
+              echo "### Full Run Mode" >> $GITHUB_STEP_SUMMARY
+              echo "- No new data detected" >> $GITHUB_STEP_SUMMARY
+              echo "- Training will proceed" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "### Pipeline Stopped" >> $GITHUB_STEP_SUMMARY
+              echo "- No new data detected" >> $GITHUB_STEP_SUMMARY
+              echo "- File checked: \`$CSV_DATA_FILE\`" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
           else 
             echo "### New Data Detected" >> $GITHUB_STEP_SUMMARY
             echo "- Training will proceed" >> $GITHUB_STEP_SUMMARY
