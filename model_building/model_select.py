@@ -8,9 +8,6 @@ import asyncio
 import mlflow
 import os
 
-HF_REPO = os.getenv("HF_REPO")
-hfApi = HfApi(token=os.getenv("HF_TOKEN"))
-
 MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME")
 if not MLFLOW_EXPERIMENT_NAME:
     raise RuntimeError("MLFLOW_EXPERIMENT_NAME not found")
