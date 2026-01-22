@@ -92,9 +92,9 @@ async def get_selection():
         validate_schema(decision, schema)
 
         ## tagging selected model ##
-        client.set_tag(decision.mlflow_run_id, "selected_for_deployment", "true")
-        client.set_tag(decision.mlflow_run_id, "selection_justification", decision.justification)
-        client.set_tag(decision.mlflow_run_id, "selection_timestamp", datetime.now().isoformat())
+        client.set_tag(decision["mlflow_run_id"], "selected_for_deployment", "true")
+        client.set_tag(decision["mlflow_run_id"], "selection_timestamp", datetime.now().isoformat())
+        client.set_tag(decision["mlflow_run_id"], "selection_justification", decision["justification"])
     except Exception as e:
         print(f"Agent failed: {e}")
 
