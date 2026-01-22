@@ -70,12 +70,12 @@ jobs:
 
           cd ./mlops-tourism
           if git diff --quiet HEAD~1 HEAD -- "$CSV_DATA_FILE"; then
-            echo "### Pipeline stopped" >> $GITHUB_STEP_SUMMARY
+            echo "### Pipeline Stopped" >> $GITHUB_STEP_SUMMARY
             echo "- No new data detected" >> $GITHUB_STEP_SUMMARY
             echo "- File checked: \`$CSV_DATA_FILE\`" >> $GITHUB_STEP_SUMMARY
             exit 1
           else 
-            echo "### New data detected" >> $GITHUB_STEP_SUMMARY
+            echo "### New Data Detected" >> $GITHUB_STEP_SUMMARY
             echo "- Training will proceed" >> $GITHUB_STEP_SUMMARY
           fi
           cd ..
@@ -103,6 +103,7 @@ jobs:
     env:
       MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
       MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      MLFLOW_EXPERIMENT_NAME: ${{ vars.MLFLOW_EXPERIMENT_NAME }}
       MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
       HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
       HF_REPO: ${{ vars.HF_REPO }}
@@ -114,7 +115,7 @@ jobs:
         run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
 
       - name: Model Evaluation
-        run: python ./model_building/model_train.py
+        run: python ./model_building/model_build.py
 
   model_deploy:
     needs: model_build
@@ -122,12 +123,21 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     env:
+      MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+      MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+      MLFLOW_EXPERIMENT_NAME: ${{ vars.MLFLOW_EXPERIMENT_NAME }}
+      MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
       HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
       HF_REPO: ${{ vars.HF_REPO }}
 
     steps:
-      - name: Deploy Model to HF
-        run: echo "Model Deploy"
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+
+      - name: Model Deployment
+        run: python ./model_building/model_select.py
 
   ui_deploy:
     needs: [setup, model_deploy]

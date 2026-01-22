@@ -19,17 +19,24 @@ import pandas as pd
 import mlflow
 import uuid
 import time
-import sys
 import os
 
 HF_REPO = os.getenv("HF_REPO")
 hfApi = HfApi(token=os.getenv("HF_TOKEN"))
 print(f"Loading Train/Test files from HF Dataset: {HF_REPO}")
 
+MLFLOW_EXPERIMENT_NAME = os.getenv("MLFLOW_EXPERIMENT_NAME")
+if not MLFLOW_EXPERIMENT_NAME:
+    raise RuntimeError("MLFLOW_EXPERIMENT_NAME not found")
+
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 if not MLFLOW_TRACKING_URI:
-    print("MLFLOW_TRACKING_URI is not set")
-    sys.exit(1)
+    raise RuntimeError("MLFLOW_TRACKING_URI not found")
+
+PIPELINE_RUN_ID = os.getenv("GITHUB_RUN_ID")
+GIT_SHA = os.getenv("GITHUB_SHA")
+if not PIPELINE_RUN_ID:
+    PIPELINE_RUN_ID = f"local_{uuid.uuid4().hex[:12]}"
 
 # Checking train/test splits are present or not
 files = ["X_train", "y_train", "X_test", "y_test"]
@@ -38,12 +45,12 @@ for f in files:
     try:
         pd.read_csv(path, nrows=1)
     except FileNotFoundError:
-        print(f"{f}.csv missing @HF Dataset.")
-        sys.exit(1)
+        raise RuntimeError(f"{f}.csv missing @HF Dataset")
     except Exception as e:
-        print(f"Error Checking Path: {path} | Err: {e}")
-        sys.exit(1)
+        raise RuntimeError(f"Error Checking Path: {path} | Err: {e}")
 
+
+## Load the train and test data from the Hugging Face data space ##
 X_train = pd.read_csv(f"hf://datasets/{HF_REPO}/X_train.csv")
 y_train = pd.read_csv(f"hf://datasets/{HF_REPO}/y_train.csv")
 X_test = pd.read_csv(f"hf://datasets/{HF_REPO}/X_test.csv")
@@ -68,7 +75,7 @@ col_processor = make_column_transformer(
 )
 col_processor.set_output(transform="pandas")
 
-### model complexity & performance ###
+## model complexity & performance ##
 def extract_model_structure(model):
     """
     Extracts structural indicators from the final estimator
@@ -97,9 +104,6 @@ def extract_model_structure(model):
     elif hasattr(estimator, "tree_"):  # Single tree
         structure["total_tree_nodes"] = estimator.tree_.node_count
 
-    elif hasattr(estimator, "coef_"):  # Linear models
-        structure["n_coefficients"] = estimator.coef_.size
-
     return structure
 
 def classify_model_complexity(structure):
@@ -125,7 +129,6 @@ def classify_model_complexity(structure):
 
     return "unknown"
 
-
 def measure_inference_latency(model, X, n_runs=100):
     X_sample = X.iloc[:1]
 
@@ -138,17 +141,12 @@ def measure_inference_latency(model, X, n_runs=100):
     end = time.perf_counter()
 
     return round((end - start) / n_runs * 1000, 4)
-###
 
-PIPELINE_RUN_ID = os.getenv("GITHUB_RUN_ID")
-GIT_SHA = os.getenv("GITHUB_SHA")
-if not PIPELINE_RUN_ID:
-    PIPELINE_RUN_ID = f"local_{uuid.uuid4().hex[:12]}"
+#####################################################
 
-# model eval
-EXPERIMENT_NAME = "wellness-purchase-propensity"
+## model eval ##
+mlflow.set_experiment(MLFLOW_EXPERIMENT_NAME)
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-mlflow.set_experiment(EXPERIMENT_NAME)
 
 for model_name, cfg in MODEL_CONFIG.items():
     run_name = f"{model_name}_rs_{PIPELINE_RUN_ID}"
@@ -157,9 +155,9 @@ for model_name, cfg in MODEL_CONFIG.items():
         mlflow.set_tags({
             "model_name": model_name,
             "git_commit_sha": GIT_SHA,
-            "pipeline_job": "model_train",
+            "pipeline_job": "model_build",
             "pipeline_run_id": PIPELINE_RUN_ID,
-            "run_at": f"{time.strftime('%Y-%m-%d_%H:%M')}"
+            "run_at": f"{time.strftime('%Y-%m-%dT%H:%M')}"
         })
 
         pipeline = make_pipeline(col_processor, cfg["estimator"])

@@ -1,0 +1,27 @@
+
+{
+  "schema": {
+    "type": "object",
+    "properties": {
+      "selected_model_name": {
+        "type": "string"
+      },
+      "mlflow_run_id": {
+        "type": "string"
+      },
+      "justification": {
+        "type": "string",
+        "maxLength": 300
+      }
+    },
+    "required": ["selected_model_name", "mlflow_run_id", "justification"],
+    "additionalProperties": false
+  },
+  "execution_settings": {
+    "default": {
+      "temperature": 0,
+      "max_tokens": 300,
+      "response_format": { "type": "json_object" }
+    }
+  }
+}
