@@ -52,11 +52,14 @@ for f in files:
 
 ## Load the train and test data from the Hugging Face data space ##
 X_train = pd.read_csv(f"hf://datasets/{HF_REPO}/X_train.csv")
-y_train = pd.read_csv(f"hf://datasets/{HF_REPO}/y_train.csv")
+yTrain = pd.read_csv(f"hf://datasets/{HF_REPO}/y_train.csv")
 X_test = pd.read_csv(f"hf://datasets/{HF_REPO}/X_test.csv")
-y_test = pd.read_csv(f"hf://datasets/{HF_REPO}/y_test.csv")
+yTest = pd.read_csv(f"hf://datasets/{HF_REPO}/y_test.csv")
 
 print(X_train.info())
+
+y_train = yTrain['ProdTaken']
+y_test = yTest['ProdTaken']
 
 # column processors
 cat_pipeline = Pipeline([

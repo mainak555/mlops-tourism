@@ -3,6 +3,8 @@ from agents.model_selector_agent.run import run_model_selector
 from agents.agent_util import load_schema, validate_schema
 from mlflow.tracking import MlflowClient
 from datetime import datetime
+from pprint import pprint
+import asyncio
 import mlflow
 import os
 
@@ -83,8 +85,15 @@ for run in runs:
 
 ## calling agent ##
 SCHEMA_PATH = "agents/model_selector_agent/select_model/config.json"
-decision = await run_model_selector(agent_payload)
 
+async def get_selection():
+    try:
+        decision = await run_model_selector(agent_payload)
+        pprint(decision)
+    except Exception as e:
+        print(f"Agent failed: {e}")
+
+asyncio.run(get_selection())
 schema = load_schema(SCHEMA_PATH)
 validate_schema(decision, schema)
 
