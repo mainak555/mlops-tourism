@@ -87,14 +87,15 @@ async def get_selection():
     try:
         decision = await run_model_selector(agent_payload)
         pprint(decision)
+
+        schema = load_schema(SCHEMA_PATH)
+        validate_schema(decision, schema)
+
+        ## tagging selected model ##
+        client.set_tag(decision.mlflow_run_id, "selected_for_deployment", "true")
+        client.set_tag(decision.mlflow_run_id, "selection_justification", decision.justification)
+        client.set_tag(decision.mlflow_run_id, "selection_timestamp", datetime.now().isoformat())
     except Exception as e:
         print(f"Agent failed: {e}")
 
 asyncio.run(get_selection())
-schema = load_schema(SCHEMA_PATH)
-validate_schema(decision, schema)
-
-## tagging selected model ##
-client.set_tag(decision.mlflow_run_id, "selected_for_deployment", "true")
-client.set_tag(decision.mlflow_run_id, "selection_justification", decision.justification)
-client.set_tag(decision.mlflow_run_id, "selection_timestamp", datetime.now().isoformat())
