@@ -62,6 +62,20 @@ jobs:
       HF_REPO: ${{ vars.HF_REPO }}
 
     steps:
+      - name: Check Whether New Data
+        run: |
+          git config --global credential.helper store
+          printf "https://user:%s@huggingface.co\n" "$HF_TOKEN" > ~/.git-credentials
+          git clone https://huggingface.co/dataset/${HF_REPO}
+
+          cd ./mlops-tourism
+          if git diff --quiet HEAD~1 HEAD -- "$CSV_DATA_FILE"; then
+            echo "New Data Arrived...."
+          else 
+            exit 1
+          fi
+          cd ..
+
       - uses: actions/checkout@v4
 
       - name: Install dependencies

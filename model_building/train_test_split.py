@@ -9,30 +9,10 @@ import os
 hfApi = HfApi(token=os.getenv("HF_TOKEN"))
 DATASET_PATH = f"hf://datasets/{os.getenv("HF_REPO")}/{os.getenv("CSV_DATA_FILE")}"
 
-## Extra Code to prevent from duplicate run due to train/test splits commit ##
-## Not a Real Prod Scenario ##
-commit = hfApi.list_repo_commits(
-    repo_id=os.getenv("HF_REPO"),
-    repo_type="dataset"
-)[0]
-
-changes = []
-tree = list(hfApi.list_repo_tree(os.getenv("HF_REPO"), repo_type="dataset", expand=True))
-for item in tree:
-    if hasattr(item, 'last_commit') and item.last_commit:
-        if item.last_commit['oid'] == commit.commit_id:
-            changes.append(item.path)
-
-if os.getenv("CSV_DATA_FILE") not in changes:
-    print("No Change in Source Data")
-    sys.exit(1)
-
-##############################
-
 try:
     df = pd.read_csv(DATASET_PATH)
 except FileNotFoundError:
-        print(f"{f}.csv missing @HF Dataset.")
+        print(f"{os.getenv("CSV_DATA_FILE")}.csv missing @HF Dataset")
         sys.exit(1)
 except Exception as e:
     print(f"Error Checking Path: {DATASET_PATH} | Err: {e}")
