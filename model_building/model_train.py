@@ -16,8 +16,8 @@ from sklearn.impute import SimpleImputer
 from model_config import MODEL_CONFIG
 from huggingface_hub import HfApi
 import pandas as pd
-import numpy as np
 import mlflow
+import uuid
 import time
 import sys
 import os
@@ -69,18 +69,62 @@ col_processor = make_column_transformer(
 col_processor.set_output(transform="pandas")
 
 ### model complexity & performance ###
-def get_model_complexity(model):
-    if hasattr(model, "estimators_"):
-        return sum(
+def extract_model_structure(model):
+    """
+    Extracts structural indicators from the final estimator
+    """
+    # unwrap pipeline if needed
+    if hasattr(model, "steps"):  # sklearn Pipeline
+        estimator = model.steps[-1][1]
+    else:
+        estimator = model
+
+    structure = {
+        "model_family": estimator.__class__.__name__,
+        "n_estimators": None,
+        "total_tree_nodes": None,
+        "n_coefficients": None,
+    }
+
+    if hasattr(estimator, "estimators_"):  # Tree ensembles
+        structure["n_estimators"] = len(estimator.estimators_)
+        structure["total_tree_nodes"] = sum(
             est.tree_.node_count
-            for est in model.estimators_
+            for est in estimator.estimators_
             if hasattr(est, "tree_")
         )
-    if hasattr(model, "tree_"):
-        return model.tree_.node_count
-    if hasattr(model, "coef_"):
-        return model.coef_.size
-    return None
+
+    elif hasattr(estimator, "tree_"):  # Single tree
+        structure["total_tree_nodes"] = estimator.tree_.node_count
+
+    elif hasattr(estimator, "coef_"):  # Linear models
+        structure["n_coefficients"] = estimator.coef_.size
+
+    return structure
+
+def classify_model_complexity(structure):
+    """
+    Converts structural indicators into complexity classes
+    """
+
+    model_family = structure["model_family"]
+    total_nodes = structure.get("total_tree_nodes")
+    n_estimators = structure.get("n_estimators") or 1
+
+    # Tree-based ensembles
+    if model_family in ["RandomForestClassifier", "BaggingClassifier", "AdaBoostClassifier"]:
+        if n_estimators <= 100 and total_nodes and total_nodes <= 50_000:
+            return "medium"
+        return "high"
+
+    # Single trees
+    if model_family == "DecisionTreeClassifier":
+        if total_nodes and total_nodes <= 5_000:
+            return "low"
+        return "medium"
+
+    return "unknown"
+
 
 def measure_inference_latency(model, X, n_runs=100):
     X_sample = X.iloc[:1]
@@ -96,17 +140,27 @@ def measure_inference_latency(model, X, n_runs=100):
     return round((end - start) / n_runs * 1000, 4)
 ###
 
+PIPELINE_RUN_ID = os.getenv("GITHUB_RUN_ID")
+GIT_SHA = os.getenv("GITHUB_SHA")
+if not PIPELINE_RUN_ID:
+    PIPELINE_RUN_ID = f"local_{uuid.uuid4().hex[:12]}"
+
 # model eval
-results = []
 EXPERIMENT_NAME = "wellness-purchase-propensity"
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment(EXPERIMENT_NAME)
 
 for model_name, cfg in MODEL_CONFIG.items():
-    run_name = f"{model_name}_{time.strftime('%Y-%m%d_%H%M')}"
+    run_name = f"{model_name}_rs_{PIPELINE_RUN_ID}"
     print(f"mlFlow Run: {run_name}")
     with mlflow.start_run(run_name=run_name):     
-        mlflow.set_tag("model_name", model_name)
+        mlflow.set_tags({
+            "model_name": model_name,
+            "git_commit_sha": GIT_SHA,
+            "pipeline_job": "model_train",
+            "pipeline_run_id": PIPELINE_RUN_ID,
+            "run_at": f"{time.strftime('%Y-%m-%d_%H:%M')}"
+        })
 
         pipeline = make_pipeline(col_processor, cfg["estimator"])
         search = RandomizedSearchCV(
@@ -140,10 +194,10 @@ for model_name, cfg in MODEL_CONFIG.items():
         mlflow.log_metric("test_auc", test_auc)
         mlflow.log_metric("test_f1", test_f1)
 
-        # log hyperparameters
+        # log hyper-parameters
         mlflow.log_params(search.best_params_)
 
-        # feature importance
+        # feature importance        
         perm = permutation_importance(
             best_model,
             X_test,
@@ -162,39 +216,62 @@ for model_name, cfg in MODEL_CONFIG.items():
         df_feature_importance["importance_norm"] = df_feature_importance["importance"] / df_feature_importance["importance"].sum()
         df_feature_importance["cum_importance"] = df_feature_importance["importance_norm"].cumsum()
 
-        # top (5 - 8) inputs
+        # top k features
         MAX_FEATURES = 15
-        top_k_features = df_feature_importance.loc[df_feature_importance["cum_importance"] <= 0.95, "feature"].head(MAX_FEATURES).to_list()
+        COVERAGE_THRESHOLD = 0.95
+        top_k_df = df_feature_importance.loc[df_feature_importance["cum_importance"] <= COVERAGE_THRESHOLD].head(MAX_FEATURES)
+        top_k_features_artifact = {
+            "top_k": len(top_k_df),
+            "coverage_threshold": COVERAGE_THRESHOLD,
+            "coverage_pct": round(top_k_df["importance_norm"].sum() * 100, 2),
+            "features": [
+                {
+                    "name": row["feature"],
+                    "importance": round(row["importance_norm"], 6),
+                    "cumulative_importance": round(row["cum_importance"], 6)
+                }
+                for _, row in top_k_df.iterrows()
+            ]
+        }
 
-        mlflow.log_param("top_k_features", ",".join(top_k_features))
-        mlflow.log_param("top_k_features_count", len(top_k_features))
+        mlflow.log_dict(
+            top_k_features_artifact,
+            artifact_file="feature_analysis/top_k_features.json"
+        )
+        mlflow.set_tag("feature_importance_method", "permutation_importance")
+        mlflow.log_metric("feature_importance_coverage_pct", COVERAGE_THRESHOLD)
+        mlflow.log_metric("top_k_features_count", top_k_features_artifact["top_k"])
 
         # model performance
-        model_complexity = get_model_complexity(best_model)
         inference_latency_ms = measure_inference_latency(best_model, X_test)
+        mlflow.log_metric("inference_latency_ms", inference_latency_ms)           
 
+        # model complexity
+        structure = extract_model_structure(best_model)
+        model_complexity = classify_model_complexity(structure)
         mlflow.log_param("model_complexity", model_complexity)
-        mlflow.log_param("inference_latency_ms", inference_latency_ms)
 
-        # agent payload
-        results.append({
-            "model_name": model_name,
-            "top_features": top_k_features,
-            "model_complexity": model_complexity,
-            "feature_importance_coverage_pct": 0.95,
-            "top_features_count": len(top_k_features),
-            "best_hyperparameters": search.best_params_,
-            "inference_latency_ms": inference_latency_ms,
-            "input_features": best_model.feature_names_in_,
-            "mlflow_run_id": mlflow.active_run().info.run_id,
-            "input_features_count": best_model.n_features_in_,
-            "feature_importance_method": "permutation_importance",
-            "metrics": {
-                "cv_auc_mean": round(search.best_score_, 4),
-                "test_precision": round(test_precision, 4),
-                "test_recall": round(test_recall, 4),
-                "test_auc": round(test_auc, 4),
-                "test_f1": round(test_f1, 4)
-            },
-        })   
-         
+        # feature details
+        raw_features = X_train.columns.to_list()
+        raw_features_artifact = {
+            "total_raw_features": len(raw_features),
+            "features": raw_features
+        }
+
+        mlflow.log_dict(
+            raw_features_artifact,
+            artifact_file="feature_schema/raw_features.json"
+        )
+        mlflow.set_tag("total_raw_features", len(raw_features))
+
+        transformed_features = best_model.named_steps["columntransformer"].get_feature_names_out().tolist()
+        transformed_features_artifact = {
+            "total_transformed_features": len(transformed_features),
+            "features": transformed_features
+        }
+
+        mlflow.log_dict(
+            transformed_features_artifact,
+            artifact_file="feature_schema/transformed_features.json"
+        )
+        mlflow.log_metric("total_transformed_features", len(transformed_features))   
