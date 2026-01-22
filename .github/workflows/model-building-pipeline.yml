@@ -140,7 +140,7 @@ jobs:
         run: pip install --no-cache-dir --upgrade semantic-kernel==1.39.2
 
       - name: Model Selection
-        run: python ./model_building/model_select.py
+        run: python -m model_building.model_select
 
       - name: Model Deploy
         run: echo 'WIP'
