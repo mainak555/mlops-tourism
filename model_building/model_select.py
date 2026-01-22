@@ -1,11 +1,8 @@
 
 from agents.model_selector_agent.run import run_model_selector
-from util2 import num_features_selector, cat_features_selector
 from agents.agent_util import load_schema, validate_schema
-from sklearn.model_selection import RandomizedSearchCV
 from mlflow.tracking import MlflowClient
-from model_config import MODEL_CONFIG
-from huggingface_hub import HfApi
+from datetime import datetime
 import mlflow
 import os
 
@@ -89,4 +86,9 @@ SCHEMA_PATH = "agents/model_selector_agent/select_model/config.json"
 decision = await run_model_selector(agent_payload)
 
 schema = load_schema(SCHEMA_PATH)
-validate_schema(output, schema)
+validate_schema(decision, schema)
+
+## tagging selected model ##
+client.set_tag(decision.mlflow_run_id, "selected_for_deployment", "true")
+client.set_tag(decision.mlflow_run_id, "selection_justification", decision.justification)
+client.set_tag(decision.mlflow_run_id, "selection_timestamp", datetime.now().isoformat())

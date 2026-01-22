@@ -168,7 +168,7 @@ for model_name, cfg in MODEL_CONFIG.items():
             random_state=42,
             n_iter=20,
             n_jobs=-1,
-            verbose=1,
+            verbose=0,
             cv=5,
         )
 

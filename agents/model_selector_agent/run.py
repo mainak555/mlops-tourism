@@ -1,7 +1,6 @@
 
-from schema_validator import validate_agent_output, load_schema
 from semantic_kernel.functions import KernelArguments
-from agents.agent_util import create_kernel, sc
+from agents.agent_util import create_kernel
 import json
 
 async def run_model_selector(payload: dict) -> dict:

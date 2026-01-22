@@ -112,7 +112,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+        run: pip install --no-cache-dir --upgrade -r .github/requirements2.txt
 
       - name: Model Evaluation
         run: python ./model_building/model_build.py
@@ -134,10 +134,16 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: pip install --no-cache-dir --upgrade -r .github/requirements.txt
+        run: pip install --no-cache-dir --upgrade -r .github/requirements2.txt
 
-      - name: Model Deployment
+      - name: Install Agent dependencies
+        run pip install --no-cache-dir --upgrade semantic-kernel==1.39.2
+
+      - name: Model Selection
         run: python ./model_building/model_select.py
+
+      - name Model Deploy
+        run: echo 'WIP'
 
   ui_deploy:
     needs: [setup, model_deploy]
