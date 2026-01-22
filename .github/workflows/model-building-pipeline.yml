@@ -70,10 +70,13 @@ jobs:
 
           cd ./mlops-tourism
           if git diff --quiet HEAD~1 HEAD -- "$CSV_DATA_FILE"; then
-            echo "No New Data"
+            echo "### Pipeline stopped" >> $GITHUB_STEP_SUMMARY
+            echo "- No new data detected" >> $GITHUB_STEP_SUMMARY
+            echo "- File checked: \`$CSV_DATA_FILE\`" >> $GITHUB_STEP_SUMMARY
             exit 1
           else 
-            echo "New Data Arrived...."
+            echo "### New data detected" >> $GITHUB_STEP_SUMMARY
+            echo "- Training will proceed" >> $GITHUB_STEP_SUMMARY
           fi
           cd ..
 
