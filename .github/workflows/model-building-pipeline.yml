@@ -70,9 +70,10 @@ jobs:
 
           cd ./mlops-tourism
           if git diff --quiet HEAD~1 HEAD -- "$CSV_DATA_FILE"; then
-            echo "New Data Arrived...."
+            echo "No New Data"
+            exit 0
           else 
-            exit 1
+            echo "New Data Arrived...."
           fi
           cd ..
 
