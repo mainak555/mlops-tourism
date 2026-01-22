@@ -101,6 +101,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     env:
+      AZURE_OPENAI_DEPLOYMENT: ${{ vars.AZURE_OPENAI_DEPLOYMENT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
       MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
       MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
       MLFLOW_EXPERIMENT_NAME: ${{ vars.MLFLOW_EXPERIMENT_NAME }}
@@ -140,7 +143,7 @@ jobs:
         run: pip install --no-cache-dir --upgrade semantic-kernel==1.39.2
 
       - name: Model Selection
-        run: python -m model_building.model_select
+        run: python -m model_building.model_select # import agents**
 
       - name: Model Deploy
         run: echo 'WIP'
