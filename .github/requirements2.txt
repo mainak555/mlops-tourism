@@ -7,3 +7,4 @@ huggingface_hub==0.34.3
 numpy==2.1.2
 scipy==1.16.0
 mlflow==3.8.1
+joblib==1.5.1

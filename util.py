@@ -1,7 +1,7 @@
 
 # helper functions will be used across pipelines
+from huggingface_hub.utils import RepositoryNotFoundError
 from huggingface_hub import create_repo, HfApi
-from huggingface_hub.utils import RepositoryNotFoundError, HfHubHTTPError
 
 def create_hf_repo(hfApi: HfApi, repo_id: str, repo_type: str):
     try:
