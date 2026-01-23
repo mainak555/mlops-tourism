@@ -54,6 +54,7 @@ jobs:
 
   data_clean:
     needs: setup    
+    name: Data Ingestion
     if: ${{ needs.setup.outputs.run_mode == 'Full' || needs.setup.outputs.run_mode == 'RepoDispatch' }}
     runs-on: ubuntu-latest
     environment: prod
@@ -100,6 +101,7 @@ jobs:
 
   model_build:
     needs: [setup, data_clean]
+    name: Model Training
     if: >- 
       ${{ 
         always() && !failure() && !cancelled() &&
@@ -126,6 +128,7 @@ jobs:
 
   model_deploy:
     needs: model_build
+    name: Model Deployment
     if: always() && !failure() && !cancelled() && needs.model_build.result == 'success'
     runs-on: ubuntu-latest
     environment: prod
@@ -153,10 +156,11 @@ jobs:
         run: python -m model_building.model_select # import agents**
 
       - name: Model Deploy
-        run: echo 'WIP'
+        run: python ./model_building/model_deploy.py
 
   ui_deploy:
     needs: [setup, model_deploy]
+    name: App Deployment
     if: >-
       ${{
         always() && !failure() && !cancelled() &&

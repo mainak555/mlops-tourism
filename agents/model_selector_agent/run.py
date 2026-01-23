@@ -1,6 +1,6 @@
 
+from agents.agent_util import create_kernel, load_schema, validate_schema
 from semantic_kernel.functions import KernelArguments
-from agents.agent_util import create_kernel
 import json
 
 async def run_model_selector(payload: dict) -> dict:
@@ -11,15 +11,21 @@ async def run_model_selector(payload: dict) -> dict:
         parent_directory="agents"
     )
 
-    arguments = KernelArguments(input=json.dumps(payload, indent=2))
+    args = KernelArguments(input=json.dumps(payload, indent=2))
 
     result = await kernel.invoke(
         model_selector["select_model"],
-        arguments=arguments
+        arguments=args
     )
 
     try:
-        return json.loads(str(result))
+        output = json.loads(str(result))
     except json.JSONDecodeError:
         print(f"Raw Output: {result}")
         raise RuntimeError("Model Selector Agent returned invalid JSON")
+
+    ## output validation ##
+    SCHEMA_PATH = "agents/model_selector_agent/select_model/config.json"
+    schema = load_schema(SCHEMA_PATH)
+    validate_schema(output, schema)
+    return output

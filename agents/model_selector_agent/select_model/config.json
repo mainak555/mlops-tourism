@@ -11,7 +11,7 @@
       },
       "justification": {
         "type": "string",
-        "maxLength": 300
+        "maxLength": 150
       }
     },
     "required": ["selected_model_name", "mlflow_run_id", "justification"],

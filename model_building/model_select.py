@@ -1,6 +1,5 @@
 
 from agents.model_selector_agent.run import run_model_selector
-from agents.agent_util import load_schema, validate_schema
 from mlflow.tracking import MlflowClient
 from datetime import datetime
 from pprint import pprint
@@ -21,10 +20,9 @@ if not PIPELINE_RUN_ID:
     raise RuntimeError("PIPELINE_RUN_ID not found")
 
 # get experiment results
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-
 client = MlflowClient()
-experiment = client.get_experiment_by_name("wellness-purchase-propensity")
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
 
 runs = client.search_runs(
     experiment_ids=[experiment.experiment_id],
@@ -81,15 +79,12 @@ for run in runs:
     })
 
 ## calling agent ##
-SCHEMA_PATH = "agents/model_selector_agent/select_model/config.json"
+
 
 async def get_selection():
     try:
         decision = await run_model_selector(agent_payload)
         pprint(decision)
-
-        schema = load_schema(SCHEMA_PATH)
-        validate_schema(decision, schema)
 
         ## tagging selected model ##
         client.set_tag(decision["mlflow_run_id"], "selected_for_deployment", "true")
