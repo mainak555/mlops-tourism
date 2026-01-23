@@ -66,7 +66,7 @@ model_dict = evaluate(f"{PIPELINE_RUN_ID}_final", "model_deploy", {
 }, X_train[top_k_features], y_train, X_test[top_k_features], y_test)
 
 ## model serialization ##
-bin_path = f"artifact/{MLFLOW_EXPERIMENT_NAME}.joblib"
+bin_path = f"{LOCAL_ARTIFACT_DIR}/{MLFLOW_EXPERIMENT_NAME}.joblib"
 bin_name =f"{MLFLOW_EXPERIMENT_NAME}.joblib"
 version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
 
