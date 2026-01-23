@@ -130,7 +130,10 @@ def evaluate(
     PIPELINE_RUN_ID: string => github run id
     pipeline_job: string => job type
     returns: dict => {
-        model_name: estimator
+        model_name: {
+            estimator: estimator => model,
+            mlflow_run_id: str => mlflow run id
+        }
     }
     """
 
@@ -169,7 +172,7 @@ def evaluate(
         run_name = f"{model_name}_rs_{PIPELINE_RUN_ID}"
         print(f"mlFlow Run: {run_name}")
 
-        with mlflow.start_run(run_name=run_name):     
+        with mlflow.start_run(run_name=run_name) as run:     
             mlflow.set_tags({
                 "model_name": model_name,
                 "git_commit_sha": GIT_SHA,
@@ -192,7 +195,12 @@ def evaluate(
 
             search.fit(X_train, y_train)
             best_model = search.best_estimator_
-            output[model_name] = copy.deepcopy(best_model)
+
+            # returns
+            output[model_name] = {
+                "estimator": copy.deepcopy(best_model),
+                "mlflow_run_id": run.info.run_id
+            }
 
             # predictions
             y_pred_proba = best_model.predict(X_test)

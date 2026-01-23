@@ -61,16 +61,24 @@ top_k_features = [
 
 ## get data & train final model ##
 X_train, y_train, X_test, y_test = get_train_test_split()
-model_dict = evaluate(f"{PIPELINE_RUN_ID}_final", "model_deploy", {
+result_dict = evaluate(f"{PIPELINE_RUN_ID}_final", "model_deploy", {
     model_name: MODEL_CONFIG[model_name] #only selected model
 }, X_train[top_k_features], y_train, X_test[top_k_features], y_test)
+
+"""result_dict =>
+    model_name: {
+        estimator: estimator
+        mlflow_run_id: str
+    }
+"""
 
 ## model serialization ##
 bin_path = f"{LOCAL_ARTIFACT_DIR}/{MLFLOW_EXPERIMENT_NAME}.joblib"
 bin_name =f"{MLFLOW_EXPERIMENT_NAME}.joblib"
 version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
 
-joblib.dump(model_dict[model_name], bin_path)
+joblib.dump(result_dict[model_name]["estimator"], bin_path)
+run_id = result_dict[model_name]["mlflow_run_id"]
 
 ## deploy to HF ##
 hfApi.upload_file(
