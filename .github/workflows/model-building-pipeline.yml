@@ -156,7 +156,7 @@ jobs:
         run: python -m model_building.model_select # import agents**
 
       - name: Model Deploy
-        run: python ./model_building/model_deploy.py
+        run: python -m model_building.model_deploy.py # import util**
 
   ui_deploy:
     needs: [setup, model_deploy]
