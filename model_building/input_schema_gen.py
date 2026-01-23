@@ -1,5 +1,5 @@
 
-from model_train import get_train_test_split
+from model_building.model_train import get_train_test_split
 from agents.schema_generator_agent.run import run_schema_generator
 from mlflow.tracking import MlflowClient
 from huggingface_hub import HfApi
