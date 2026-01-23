@@ -2,6 +2,7 @@
 from model_train import get_train_test_split, evaluate
 from mlflow.tracking import MlflowClient
 from model_config import MODEL_CONFIG
+from huggingface_hub import HfApi
 import mlflow
 import json
 import os
