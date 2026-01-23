@@ -7,8 +7,8 @@ async def run_model_selector(payload: dict) -> dict:
     kernel = create_kernel()
 
     model_selector = kernel.add_plugin(
-        plugin_name="model_selector_agent",
-        parent_directory="agents"
+        plugin_name="model_selector_plugin",
+        parent_directory="agents/plugins"
     )
 
     args = KernelArguments(input=json.dumps(payload, indent=2))
@@ -25,7 +25,7 @@ async def run_model_selector(payload: dict) -> dict:
         raise RuntimeError("Model Selector Agent returned invalid JSON")
 
     ## output validation ##
-    SCHEMA_PATH = "agents/model_selector_agent/select_model/config.json"
+    SCHEMA_PATH = "agents/plugins/model_selector_plugin/select_model/config.json"
     schema = load_schema(SCHEMA_PATH)
     validate_schema(output, schema)
     return output

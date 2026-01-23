@@ -155,11 +155,14 @@ jobs:
       - name: Model Selection
         run: python -m model_building.model_select # import agents**
 
-      - name: Register HF Model Repository
+      - name: HF Model Repository
         run: python ./model_reg.py 
 
       - name: Model Deploy
         run: python ./model_building/model_deploy.py 
+
+      - name: Input Schema Generator
+        run: python -m model_building.input_schema_gen # import agents**
 
   ui_deploy:
     needs: [setup, model_deploy]

@@ -79,8 +79,6 @@ for run in runs:
     })
 
 ## calling agent ##
-
-
 async def get_selection():
     try:
         decision = await run_model_selector(agent_payload)

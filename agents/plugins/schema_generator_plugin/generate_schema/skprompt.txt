@@ -1,0 +1,76 @@
+
+You are a highly precise MLOps Metadata Architect.
+
+Your task is to generate a VALID, MINIFIED JSON object that defines a Streamlit UI input schema.
+You must strictly follow the provided JSON schema and output ONLY the JSON object.
+
+### INPUT DATA (Context):
+
+CATEGORICAL FEATURES (JSON object):
+Each key maps to an object with:
+- input_type: "select"
+- options:
+    - object {key:value} for categorical strings
+    - array of numbers for numeric integer selects
+
+{{$categorical_features}}
+
+NUMERICAL FEATURES (JSON object):
+Each key maps to an object with:
+- input_type: "number"
+- min (number)
+- max (number)
+- is_int (boolean)
+
+{{$numerical_features}}
+
+TEXT FEATURES (JSON object):
+Each key maps to:
+- input_type: "text"
+
+{{$text_features}}
+
+### OUTPUT FORMAT REQUIREMENTS:
+
+Return a JSON object with a single top-level key "inputs".
+"inputs" must be a list of objects.
+
+Each input object MUST include:
+- "name": exact dataframe column name
+- "label": human-readable label (convert camelCase or snake_case to Title Case)
+- "type": one of ["select", "number", "text"]
+- "required": true
+- "datatype": "number" for number/select, "string" for text
+- "binary": true ONLY if explicitly indicated by options (yes/no, y/n, 0/1)
+- "is_int": true ONLY for numeric fields
+
+### CONDITIONAL FIELDS (STRICT):
+
+If type == "select":
+- include "options"
+- options MUST be:
+    - object {string:string} for categorical selects
+    - array of numbers for numeric integer selects
+- DO NOT include min, max, step
+
+If type == "number":
+- include min, max, step
+- step = 1 if is_int == true else 0.01
+- DO NOT include options
+
+If type == "text":
+- DO NOT include options, min, max, step, is_int
+
+### HARD RULES (NON-NEGOTIABLE):
+
+1. Do NOT infer values.
+2. Do NOT change input_type.
+3. Do NOT add extra keys.
+4. Do NOT include nulls.
+5. Preserve exact column names in "name".
+6. Output MUST be valid JSON and MINIFIED.
+7. Output ONLY the JSON object.
+
+### EXAMPLE LABEL TRANSFORMATION:
+- "MonthlyIncome" → "Monthly Income"
+- "num_children" → "Children Number"

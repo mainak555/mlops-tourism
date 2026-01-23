@@ -3,7 +3,6 @@ from model_train import get_train_test_split, evaluate
 from mlflow.tracking import MlflowClient
 from model_config import MODEL_CONFIG
 from huggingface_hub import HfApi
-from pathlib import Path
 import joblib
 import mlflow
 import json
@@ -42,14 +41,16 @@ if len(runs) != 1:
 tags = runs[0].data.tags
 run_id = runs[0].info.run_id
 model_name = tags.get("model_name")
+print(f"selected mlflow run: {runs[0].info.run_name}")
+
 TOP_k_FEATURE_PATH = "feature_analysis/top_k_features.json"
-LOCAL_ARTIFACT_DIR = "./artifacts"
+LOCAL_ARTIFACT_DIR = f"./artifacts_{run_id}"
 
 os.makedirs(LOCAL_ARTIFACT_DIR, exist_ok=True)
 local_path = client.download_artifacts(
-    run_id=run_id,
+    dst_path=LOCAL_ARTIFACT_DIR,
     path=TOP_k_FEATURE_PATH,
-    dst_path=LOCAL_ARTIFACT_DIR
+    run_id=run_id,
 )
 
 with open(local_path, "r") as f:
@@ -61,7 +62,7 @@ top_k_features = [
 
 ## get data & train final model ##
 X_train, y_train, X_test, y_test = get_train_test_split()
-result_dict = evaluate(f"{PIPELINE_RUN_ID}_final", "model_deploy", {
+result_dict = evaluate(f"{PIPELINE_RUN_ID}", "model_deploy", {
     model_name: MODEL_CONFIG[model_name] #only selected model
 }, X_train[top_k_features], y_train, X_test[top_k_features], y_test)
 
@@ -79,6 +80,7 @@ version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
 
 joblib.dump(result_dict[model_name]["estimator"], bin_path)
 run_id = result_dict[model_name]["mlflow_run_id"]
+client.set_tag(run_id, "deployed", "true")
 
 ## deploy to HF ##
 hfApi.upload_file(
@@ -86,7 +88,7 @@ hfApi.upload_file(
     repo_type="model",
     path_in_repo=bin_name,
     path_or_fileobj=bin_path,
-    commit_message=f"mlflow_run_id: {run_id}",
+    commit_message=f"version: {version} | mlflow_run_id: {run_id}",
 ) # type: ignore
 hfApi.create_tag(
     repo_type="model",
@@ -95,13 +97,13 @@ hfApi.create_tag(
 )
 
 ## tagging mlflow ##
-# log HF pointer mlflow artifact
+# log HF pointer to mlflow artifact
 client.log_dict(run_id, {
-    "model_type": model_name,
+    "classifier": model_name,
     "artifact": bin_name,
     "hf_repo": HF_REPO,
-    "tag": version,
-}, artifact_file="hf_model")
+    "hf_tag": version,
+}, artifact_file="hf_model/metadata.json")
 
 # register model in mlflow registry
 model_uri = f"runs:/{run_id}/hf_model"
