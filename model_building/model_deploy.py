@@ -105,7 +105,13 @@ client.log_dict(run_id, {
 
 # register model in mlflow registry
 model_uri = f"runs:/{run_id}/hf_model"
-registered_model = client.create_registered_model(name=MLFLOW_EXPERIMENT_NAME)
+try:
+    registered_model = client.create_registered_model(name=MLFLOW_EXPERIMENT_NAME)
+except mlflow.exceptions.RestException as e:
+    if "RESOURCE_ALREADY_EXISTS" in str(e):
+        print(f"Registered model '{MLFLOW_EXPERIMENT_NAME}' already exists, continuing...")
+    else:
+        raise
 model_version = client.create_model_version(
     description=f"HF model {version}",
     name=MLFLOW_EXPERIMENT_NAME,
