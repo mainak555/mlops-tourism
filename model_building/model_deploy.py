@@ -1,9 +1,8 @@
 
-from model_building.model_train import get_train_test_split, evaluate
+from model_train import get_train_test_split, evaluate
 from mlflow.tracking import MlflowClient
 from model_config import MODEL_CONFIG
 from huggingface_hub import HfApi
-from util import create_hf_repo
 from pathlib import Path
 import joblib
 import mlflow
@@ -74,7 +73,6 @@ version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
 joblib.dump(model_dict[model_name], bin_path)
 
 ## deploy to HF ##
-create_hf_repo(hfApi, HF_REPO, "model")
 hfApi.upload_file(
     repo_id=HF_REPO,
     repo_type="model",
