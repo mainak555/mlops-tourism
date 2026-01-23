@@ -1,0 +1,57 @@
+{
+  "top_k": 10,
+  "coverage_threshold": 0.95,
+  "coverage_pct": 94.13,
+  "features": [
+    {
+      "name": "Passport",
+      "importance": 0.287004,
+      "cumulative_importance": 0.287004
+    },
+    {
+      "name": "Designation",
+      "importance": 0.263144,
+      "cumulative_importance": 0.550148
+    },
+    {
+      "name": "CityTier",
+      "importance": 0.091672,
+      "cumulative_importance": 0.64182
+    },
+    {
+      "name": "MaritalStatus",
+      "importance": 0.072945,
+      "cumulative_importance": 0.714765
+    },
+    {
+      "name": "Age",
+      "importance": 0.059503,
+      "cumulative_importance": 0.774268
+    },
+    {
+      "name": "DurationOfPitch",
+      "importance": 0.058077,
+      "cumulative_importance": 0.832345
+    },
+    {
+      "name": "PreferredPropertyStar",
+      "importance": 0.049238,
+      "cumulative_importance": 0.881583
+    },
+    {
+      "name": "Occupation",
+      "importance": 0.022664,
+      "cumulative_importance": 0.904247
+    },
+    {
+      "name": "ProductPitched",
+      "importance": 0.019192,
+      "cumulative_importance": 0.923439
+    },
+    {
+      "name": "NumberOfFollowups",
+      "importance": 0.0179,
+      "cumulative_importance": 0.941339
+    }
+  ]
+}

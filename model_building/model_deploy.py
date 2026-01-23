@@ -24,9 +24,14 @@ client = MlflowClient()
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
 
+filter_string = (
+    "tags.selected_for_deployment = 'true' AND "
+    f"tags.pipeline_run_id = '{PIPELINE_RUN_ID}'"
+)
+
 runs = client.search_runs(
     experiment_ids=[experiment.experiment_id],
-    filter_string="tags.selected_for_deployment = 'true'"
+    filter_string=filter_string
 )
 if len(runs) != 1:
     raise RuntimeError(f"Expected exactly one selected run, found {len(runs)}")
