@@ -161,8 +161,8 @@ jobs:
       - name: Model Deploy
         run: python ./model_building/model_deploy.py 
 
-      - name: Input Schema Generator
-        run: python -m model_building.input_schema_gen # import agents**
+      - name: Input Schema Update
+        run: python -m model_building.input_schema # import agents**
 
   ui_deploy:
     needs: [setup, model_deploy]

@@ -1,5 +1,4 @@
 
-
 from agents.agent_util import create_kernel, load_schema, validate_schema
 from pandas.api.types import is_integer_dtype, is_float_dtype
 from semantic_kernel.functions import KernelArguments
@@ -67,9 +66,9 @@ async def run_schema_generator(df: pd.DataFrame, input_features: list) -> dict:
         text_features=json.dumps(text_inputs)
     )    
 
-    print(num_inputs)
-    print(cat_inputs)
-    print(text_inputs)
+    print(f"number field: {num_inputs}")
+    print(f"select field: {cat_inputs}")
+    print(f"text field: {text_inputs}")
 
     result = await kernel.invoke(
         schema_generator["generate_schema"],

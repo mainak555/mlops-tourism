@@ -20,7 +20,7 @@ MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 if not MLFLOW_TRACKING_URI:
     raise RuntimeError("MLFLOW_TRACKING_URI not found")
 
-## get selected model from experiment ##
+## get selected model of experiment ##
 client = MlflowClient()
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
@@ -60,7 +60,7 @@ top_k_features = [
     f["name"] for f in top_k_artifact["features"]
 ]
 
-## get data & train final model ##
+## model optimization ##
 X_train, y_train, X_test, y_test = get_train_test_split()
 result_dict = evaluate(f"{PIPELINE_RUN_ID}", "model_deploy", {
     model_name: MODEL_CONFIG[model_name] #only selected model
@@ -81,6 +81,7 @@ version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
 joblib.dump(result_dict[model_name]["estimator"], bin_path)
 run_id = result_dict[model_name]["mlflow_run_id"]
 client.set_tag(run_id, "deployed", "true")
+client.set_tag(run_id, "version", version)
 
 ## deploy to HF ##
 hfApi.upload_file(
@@ -90,13 +91,7 @@ hfApi.upload_file(
     path_or_fileobj=bin_path,
     commit_message=f"version: {version} | mlflow_run_id: {run_id}",
 ) # type: ignore
-hfApi.create_tag(
-    repo_type="model",
-    repo_id=HF_REPO,
-    tag=version,
-)
 
-## tagging mlflow ##
 # log HF pointer to mlflow artifact
 client.log_dict(run_id, {
     "classifier": model_name,

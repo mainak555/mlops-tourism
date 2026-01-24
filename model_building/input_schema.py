@@ -1,8 +1,9 @@
 
-from model_building.model_train import get_train_test_split
 from agents.schema_generator_agent.run import run_schema_generator
 from mlflow.tracking import MlflowClient
 from huggingface_hub import HfApi
+from pprint import pprint
+import pandas as pd
 import asyncio
 import mlflow
 import json
@@ -20,13 +21,13 @@ MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
 if not MLFLOW_TRACKING_URI:
     raise RuntimeError("MLFLOW_TRACKING_URI not found")
 
-## get selected model from experiment ##
+## get deployed model of experiment ##
 client = MlflowClient()
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 experiment = client.get_experiment_by_name(MLFLOW_EXPERIMENT_NAME)
 
 filter_string = (
-    #"tags.deployed = 'true' AND "
+    "tags.deployed = 'true' AND "
     f"tags.pipeline_run_id = '{PIPELINE_RUN_ID}'"
 )
 
@@ -40,8 +41,9 @@ if len(runs) != 1:
 # deployed model details
 tags = runs[0].data.tags
 run_id = runs[0].info.run_id
+version = tags.get("version")
 model_name = tags.get("model_name")
-print(f"deployed mlflow run: {runs[0].info.run_name}")
+print(f"deployed mlflow run: {runs[0].info.run_name} | version: {version}")
 
 # get deployed model inputs
 FEATURE_PATH = "feature_schema/raw_features.json"
@@ -57,10 +59,33 @@ local_path = client.download_artifacts(
 with open(local_path, "r") as f:
     feature_schema = json.load(f)
 
-df, _, _, _ = get_train_test_split()
+## X_train for schema preparation ##
+DATASET_PATH = f"hf://datasets/{os.getenv("HF_REPO")}/X_train.csv"
+try:
+    df = pd.read_csv(DATASET_PATH)
+except FileNotFoundError:
+    print(f"X_train.csv missing @HF Dataset")
 
 async def generate_schema():
     result = await run_schema_generator(df, feature_schema["features"])
-    print(result)
+    pprint(result)
+
+    # upload to HF
+    with open(f"{LOCAL_ARTIFACT_DIR}/input_schema.json", "w") as f:
+        json.dump(schema, f, indent=2)
+
+    hfApi.upload_file(
+        path_or_fileobj=f"{LOCAL_ARTIFACT_DIR}/input_schema.json",
+        path_in_repo="input_schema.json",
+        repo_type="model",
+        repo_id=HF_REPO,
+    )
+
+    # tagging
+    hfApi.create_tag(
+        repo_type="model",
+        repo_id=HF_REPO,
+        tag=version,
+    )
 
 asyncio.run(generate_schema())
