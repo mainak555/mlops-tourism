@@ -11,7 +11,7 @@
       },
       "justification": {
         "type": "string",
-        "maxLength": 150
+        "maxLength": 200
       }
     },
     "required": ["selected_model_name", "mlflow_run_id", "justification"],
@@ -20,7 +20,7 @@
   "execution_settings": {
     "default": {
       "temperature": 0,
-      "max_tokens": 300,
+      "max_tokens": 350,
       "response_format": { "type": "json_object" }
     }
   }
