@@ -22,7 +22,7 @@ hfApi.add_space_variable(
     value=hf_repo,
 )
 hfApi.add_space_variable(
-    value=f"{os.getenv("MLFLOW_EXPERIMENT_NAME")}.joblib"
+    value=f"{os.getenv("MLFLOW_EXPERIMENT_NAME")}.joblib",
     key='MODEL_FILE',
     repo_id=hf_repo,
 )
