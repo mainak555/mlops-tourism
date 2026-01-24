@@ -10,13 +10,16 @@ COPY assets ./assets/
 COPY requirements.txt .
 COPY .streamlit .streamlit/
 
-RUN mkdir -p artifacts && chmod 777 artifacts
 # Non-root user (HF Spaces requirement)
 # UID 1000 is the standard user for HF Spaces
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
+
+RUN mkdir -p /app/artifacts \
+    && chown -R 1000:1000 /app/artifacts
+
 
 RUN python -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
