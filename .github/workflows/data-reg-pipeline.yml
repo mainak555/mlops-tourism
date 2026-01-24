@@ -23,7 +23,7 @@ jobs:
         - name: Check File Exists
           run: |
             if [ ! -f "./data/tourism.csv" ]; then
-              echo "Required file missing. Aborted."
+              echo "Required file missing. Aborted"
               exit 1
             fi
 
