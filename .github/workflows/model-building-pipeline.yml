@@ -44,6 +44,8 @@ jobs:
       run_mode: ${{ steps.mode.outputs.run_mode }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - id: mode
         run: |
