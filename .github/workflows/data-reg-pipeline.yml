@@ -9,7 +9,7 @@ on:
 
 jobs:
     deploy:      
-      name: Upload tourism.csv
+      name: Data Registration to HF
       runs-on: ubuntu-latest
       environment: prod
 
