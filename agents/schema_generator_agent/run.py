@@ -20,7 +20,7 @@ async def run_schema_generator(df: pd.DataFrame, input_features: list) -> dict:
     )
 
     cat_inputs, num_inputs, text_inputs = {}, {}, {}
-    for col in input_features:
+    for col in sorted(input_features):
         series = df[col].dropna()
         unique_values = sorted(series.unique().tolist())
         unique_count = len(unique_values)

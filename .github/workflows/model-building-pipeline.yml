@@ -20,6 +20,7 @@ on:
     branches: [ master ]
     paths:
       - model_building/**
+      - ui-app/**
 
   repository_dispatch:
     types: [ hf_webhook_event ]
@@ -48,8 +49,14 @@ jobs:
             echo "run_mode=${{ inputs.run_mode }}" >> $GITHUB_OUTPUT
           elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
             echo "run_mode=RepoDispatch" >> $GITHUB_OUTPUT
-          else
-            echo "run_mode=Push" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED_FILES=$(git diff --name-only HEAD^ HEAD)
+            OTHER_CHANGES=$(echo "$CHANGED_FILES" | grep -v '^ui-app/' || true)
+            if [ -z "$OTHER_CHANGES" ]; then
+              echo "run_mode=UI Only" >> $GITHUB_OUTPUT
+            else
+              echo "run_mode=Push" >> $GITHUB_OUTPUT
+            fi
           fi
 
   data_clean:
@@ -156,7 +163,7 @@ jobs:
         run: python -m model_building.model_select # import agents**
 
       - name: HF Model Repository
-        run: python ./model_reg.py 
+        run: python ./model-reg.py 
 
       - name: Model Deploy
         run: python ./model_building/model_deploy.py 
@@ -178,5 +185,14 @@ jobs:
     environment: prod
 
     steps:
-      - name: Deploy UI to HF
-        run: echo "UI  Deploy"
+      - name: Install dependencies
+        run: pip install --no-cache-dir --upgrade huggingface_hub==0.34.3
+
+      - name: Copy Resources
+        run: |
+          mkdir -p ui-app/assets
+          cp banner.png ui-app/assets/
+          cp model_building/util2.py ui-app/
+
+      - name: Deploy UI
+        run: python ./app-reg.py

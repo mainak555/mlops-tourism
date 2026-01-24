@@ -203,7 +203,7 @@ def evaluate(
             }
 
             # predictions
-            y_pred_proba = best_model.predict(X_test)
+            y_pred_proba = best_model.predict_proba(X_test)
             y_pred = (y_pred_proba >= 0.5).astype(int)
 
             # metrics
