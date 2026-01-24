@@ -2,6 +2,7 @@
 from semantic_kernel.connectors.ai.open_ai import AzureChatCompletion, OpenAIChatCompletion
 from jsonschema import validate, ValidationError
 from semantic_kernel import Kernel
+from pprint import pprint
 import json
 import os
 
@@ -34,6 +35,7 @@ def validate_schema(output: dict, schema: dict):
     try:
         validate(instance=output, schema=schema)
     except ValidationError as e:
+        pprint(output)
         raise RuntimeError(f"Agent output schema violation: {e.message}")
 
 def load_schema(schema_path: str) -> dict:
