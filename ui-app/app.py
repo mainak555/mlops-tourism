@@ -77,8 +77,7 @@ if submit:
         st.error("Please fill in all the required fields")
     else:
         df = pd.DataFrame([user_input])
-        proba = model.predict_proba(df)[:, 1]
-
+        proba = model.predict_proba(df)[:, 1]        
         pred = (proba >= 0.5).astype(int)
 
         st.divider()
@@ -93,6 +92,6 @@ if submit:
                 st.error("### NO")
             st.metric("Confidence", f"{round(confidence, 2)}%")
         with res_col2:
-            st.write(f"**Model Certainty for {'Yes' if prediction == 1 else 'No'}:**")
-            st.progress(proba if prediction == 1 else 1 - proba)
+            st.write(f"**Model Certainty for {'Yes' if pred == 1 else 'No'}:**")
+            st.progress(proba if pred == 1 else 1 - proba)
         st.balloons()
