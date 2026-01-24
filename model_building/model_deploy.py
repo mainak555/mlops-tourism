@@ -76,7 +76,7 @@ result_dict = evaluate(f"{PIPELINE_RUN_ID}", "model_deploy", {
 ## model serialization ##
 bin_path = f"{LOCAL_ARTIFACT_DIR}/{MLFLOW_EXPERIMENT_NAME}.joblib"
 bin_name =f"{MLFLOW_EXPERIMENT_NAME}.joblib"
-version = f"v1.0.0-build.{PIPELINE_RUN_ID}"
+version = f"v1.0-build.{PIPELINE_RUN_ID}"
 
 joblib.dump(result_dict[model_name]["estimator"], bin_path)
 run_id = result_dict[model_name]["mlflow_run_id"]

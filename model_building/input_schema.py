@@ -71,8 +71,11 @@ async def generate_schema():
     pprint(result)
 
     # upload to HF
+    result["model_name"] = model_name
+    result["model_version"] = version
+    result["schema_version"] = "1.0",
     with open(f"{LOCAL_ARTIFACT_DIR}/input_schema.json", "w") as f:
-        json.dump(schema, f, indent=2)
+        json.dump(result, f, indent=2)
 
     hfApi.upload_file(
         path_or_fileobj=f"{LOCAL_ARTIFACT_DIR}/input_schema.json",
