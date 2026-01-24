@@ -175,6 +175,30 @@ jobs:
       - name: Input Schema Update
         run: python -m model_building.input_schema # import agents**
 
+  ui_restart:
+    needs: [setup, model_deploy]
+    name: UI App Restart
+    if: >-
+      ${{
+        always() && !failure() && !cancelled() && needs.setup.outputs.run_mode == 'Partial'
+      }}
+    runs-on: ubuntu-latest
+    environment: prod
+    env:
+      HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+      HF_REPO: ${{ vars.HF_REPO }}
+
+    steps:
+      - name: Install Hugging Face CLI
+        run: |
+          git config --global credential.helper store
+          printf "https://user:%s@huggingface.co\n" "$HF_TOKEN" > ~/.git-credentials
+          git clone https://huggingface.co/spaces/${HF_REPO}
+
+          cd ./mlops-tourism
+          git commit --allow-empty -m "Restarting from Pipeline: $GITHUB_RUN_ID"
+          git push
+
   ui_deploy:
     needs: [setup, model_deploy]
     name: App Deployment
@@ -187,8 +211,14 @@ jobs:
       }}
     runs-on: ubuntu-latest
     environment: prod
+    env:
+      MLFLOW_EXPERIMENT_NAME: ${{ vars.MLFLOW_EXPERIMENT_NAME }}
+      HF_TOKEN: ${{ secrets.HUGGING_FACE_API_KEY }}
+      HF_REPO: ${{ vars.HF_REPO }}
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: pip install --no-cache-dir --upgrade huggingface_hub==0.34.3
 
