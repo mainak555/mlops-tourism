@@ -196,6 +196,9 @@ jobs:
           printf "https://user:%s@huggingface.co\n" "$HF_TOKEN" > ~/.git-credentials
           git clone https://huggingface.co/spaces/${HF_REPO}
 
+          git config --global user.email "mainak555@github.action"
+          git config --global user.name "ui_restart"
+
           cd ./mlops-tourism
           git commit --allow-empty -m "Restarting from Pipeline: $GITHUB_RUN_ID"
           git push
