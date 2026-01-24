@@ -204,7 +204,7 @@ def evaluate(
 
             # predictions
             DECISION_THRESHOLD = float(os.getenv("DECISION_THRESHOLD", 0.5))
-            y_pred_proba = best_model.predict(X_test)[:, 1] # type: ignore
+            y_pred_proba = best_model.predict_proba(X_test)[:, 1] # type: ignore
             y_pred = (y_pred_proba >= DECISION_THRESHOLD).astype(int)
 
             # metrics
