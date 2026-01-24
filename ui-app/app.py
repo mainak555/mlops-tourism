@@ -77,7 +77,7 @@ if submit:
         st.error("Please fill in all the required fields")
     else:
         df = pd.DataFrame([user_input])
-        proba = model.predict_proba(df)
+        proba = model.predict_proba(df)[:, 1]
         pred = (proba >= 0.5).astype(int)
         st.divider()
         st.subheader("Results:")

@@ -124,7 +124,7 @@ def evaluate(
     X_train: pd.DataFrame,
     y_train: pd.Series,
     X_test: pd.DataFrame,
-    y_test: pd.Series,
+    y_test: pd.Series    
 ) -> dict:
     """
     PIPELINE_RUN_ID: string => github run id
@@ -203,8 +203,9 @@ def evaluate(
             }
 
             # predictions
-            y_pred_proba = best_model.predict_proba(X_test)
-            y_pred = (y_pred_proba >= 0.5).astype(int)
+            DECISION_THRESHOLD = float(os.getenv("DECISION_THRESHOLD", 0.5))
+            y_pred_proba = best_model.predict(X_test)[:, 1] # type: ignore
+            y_pred = (y_pred_proba >= DECISION_THRESHOLD).astype(int)
 
             # metrics
             test_auc = roc_auc_score(y_test, y_pred_proba)
