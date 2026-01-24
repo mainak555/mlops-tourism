@@ -78,7 +78,7 @@ if submit:
     else:
         df = pd.DataFrame([user_input])
         proba = model.predict_proba(df)[:, 1]
-        confidence = float((1 - proba) * 100)
+
         pred = (proba >= 0.5).astype(int)
 
         st.divider()
@@ -86,13 +86,13 @@ if submit:
         res_col1, res_col2 = st.columns([1, 2])
         with res_col1:
             if pred == 1:
+                confidence = float(proba * 100)
                 st.success("### YES")                
-                st.metric("Confidence", f"{round(confidence, 2)}%")
             else:
+                confidence = float((1 - proba) * 100)
                 st.error("### NO")
-                st.metric("Confidence", f"{round(confidence, 2)}%")
+            st.metric("Confidence", f"{round(confidence, 2)}%")
         with res_col2:
-            st.write("**Confidence Level:**")
-            st.progress(confidence)
-            st.caption("The progress bar indicates the probability of a 'Yes' outcome.")
+            st.write(f"**Model Certainty for {'Yes' if prediction == 1 else 'No'}:**")
+            st.progress(proba if prediction == 1 else 1 - proba)
         st.balloons()
