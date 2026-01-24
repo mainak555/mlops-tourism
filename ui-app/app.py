@@ -87,12 +87,12 @@ if submit:
         with res_col1:
             if pred == 1:
                 st.success("### YES")                
-                st.metric("Confidence", f"{round(confidence * 100, 2)}%")
+                st.metric("Confidence", f"{round(confidence, 2)}%")
             else:
                 st.error("### NO")
-                st.metric("Confidence", f"{round((1 - confidence) * 100, 2)}%")
+                st.metric("Confidence", f"{round(confidence, 2)}%")
         with res_col2:
             st.write("**Confidence Level:**")
             st.progress(confidence)
-            st.caption("The progress bar indicates the probability of a 'YES' outcome.")
+            st.caption("The progress bar indicates the probability of a 'Yes' outcome.")
         st.balloons()
