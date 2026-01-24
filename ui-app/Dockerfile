@@ -15,7 +15,7 @@ COPY .streamlit .streamlit/
 RUN useradd -m -u 1000 user
 RUN mkdir -p /app/artifacts/.cache/huggingface \
     && chown -R 1000:1000 /app/artifacts \
-    && chmod -R 777 /app/artifacts/.cache/
+    && chmod -R 777 /app/artifacts/.cache/ \
     && chmod -R 777 /app/artifacts/.cache/huggingface
 
 USER user
