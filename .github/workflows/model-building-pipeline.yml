@@ -43,6 +43,8 @@ jobs:
     outputs:
       run_mode: ${{ steps.mode.outputs.run_mode }}
     steps:
+      - uses: actions/checkout@v4
+
       - id: mode
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
