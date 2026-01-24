@@ -90,8 +90,8 @@ if submit:
             else:
                 confidence = float((1 - proba) * 100)
                 st.error("### NO")
-            st.metric("Confidence", f"{round(confidence, 2)}%")
+            #st.metric("Confidence", f"{round(confidence, 2)}%")
         with res_col2:
             st.write(f"**Model Certainty for {'Yes' if pred == 1 else 'No'}:**")
-            st.progress(float(proba) if pred == 1 else 1 - (proba))
+            st.progress(float(proba) if pred == 1 else float(1 - proba), text=f"Confidence: {round(confidence, 2)}%")
         st.balloons()
