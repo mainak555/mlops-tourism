@@ -84,7 +84,7 @@ async def generate_schema():
         repo_id=HF_REPO,
     )
 
-    # tagging
+    # tagging version
     hfApi.create_tag(
         repo_type="model",
         repo_id=HF_REPO,
