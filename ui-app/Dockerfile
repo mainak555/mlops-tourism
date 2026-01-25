@@ -10,7 +10,7 @@ ENV HOME=/home/user \
 
 WORKDIR $HOME/app
 
-RUN mkdir --chown=user -p /app/artifacts/.cache/huggingface
+RUN mkdir -p artifacts/.cache/huggingface
 
 COPY --chown=user app.py .
 COPY --chown=user util.py .
